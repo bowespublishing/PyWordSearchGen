@@ -241,26 +241,47 @@ class WordSearch:
                 if self.grid[y][x] == "":
                     self.grid[y][x] = random.choice(string.ascii_uppercase)
 
-    def print_highlighted_grid(self):
-        highlighted_grid = [row[:] for row in self.grid]
-        for word, coord in self.placed_words:
-            x, y, direction = coord
-            for i in range(len(word)):
-                if direction == "H":
-                    highlighted_grid[x][y + i] = self.grid[x][y + i].lower()
-                elif direction == "V":
-                    highlighted_grid[x + i][y] = self.grid[x + i][y].lower()
-                elif direction == "DR":
-                    highlighted_grid[x + i][y + i] = self.grid[x + i][y + i].lower()
-                elif direction == "DL":
-                    highlighted_grid[x + i][y - i] = self.grid[x + i][y - i].lower()
-
-        for row in highlighted_grid:
-            print(' '.join(row))
-        print()
 
     def __repr__(self) -> str:
         return '\n'.join([''.join(row) for row in self.grid])
+
+
+def visualize_word_search(word_search):
+    n_words = len(word_search.words)
+    words_per_column = int(np.ceil(n_words / 3))
+    word_columns = [word_search.words[i:i + words_per_column] for i in range(0, n_words, words_per_column)]
+    word_columns += [''] * (3 - len(word_columns))
+
+    fig = plt.figure(figsize=(8, 10))
+    gs = fig.add_gridspec(3, 1, height_ratios=[word_search.height, 1, 0.2], hspace=0.4)
+    ax = fig.add_subplot(gs[0, 0])
+    ax.set_aspect('equal')
+
+    ax.set_xticks([])
+    ax.set_yticks([])
+    p=0
+
+    for x in range(word_search.width):
+        for y in range(word_search.height):
+            ax.add_patch(plt.Rectangle((x, y), 1, 1, edgecolor='black', facecolor='none'))
+            letter = word_search.grid[y][x]
+            ax.text(x + 0.5, y + 0.5, letter, va='center', ha='center')
+
+    plt.xlim(0, word_search.width)
+    plt.ylim(0, word_search.height)
+    plt.gca().invert_yaxis()
+
+    ax_table = fig.add_subplot(gs[1, 0])
+    ax_table.axis('off')
+    table_data = list(map(list, zip(*word_columns)))
+    table = ax_table.table(cellText=table_data, loc='center', cellLoc='center', colWidths=[1/3]*3)
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.scale(1, 1.5)
+    for key, cell in table.get_celld().items():
+        cell.set_edgecolor('none')
+
+    plt.show()
 
 def visualize_word_search_with_lines(word_search):
     n_words = len(word_search.words)
@@ -322,7 +343,6 @@ def visualize_word_search_with_lines(word_search):
     table.auto_set_font_size(False)
     table.set_fontsize(10)
     table.scale(1, 1.5)
-    print(str(p))
     for key, cell in table.get_celld().items():
         cell.set_edgecolor('none')
 
@@ -337,7 +357,7 @@ wordlist = [
 word_search = WordSearch(11, 11, wordlist, allow_horizontal=True, allow_vertical=True, allow_diagonal=True, allow_reverse=True)
 
 if word_search.generate_word_search():
-    word_search.print_highlighted_grid()
+    visualize_word_search(word_search)
     visualize_word_search_with_lines(word_search)
 else:
     print("Failed to generate word search with the given words.")
